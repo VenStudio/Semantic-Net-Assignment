@@ -1,1 +1,1 @@
-(Semantic Net Visualizer)[https://semantic-net-visualizer.onrender.com]
+[Semantic Net Visualizer](https://semantic-net-visualizer.onrender.com)
