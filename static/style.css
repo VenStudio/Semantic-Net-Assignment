@@ -1,72 +1,403 @@
-#controlPanel {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 999;
-    background: rgba(249, 249, 249, 0.95);
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    font-family: Arial, sans-serif;
-    width: 280px;
-    max-height: 90vh;
-    overflow-y: auto;
+:root {
+    --white: #fff8d6;
+    --black: #0d0110;
+    --primary: #eb7044;
+    --secondary: #82474c;
+    --accent: #409fbc;
+    --danger: #E5383B;
+    --bg: #191919;
+    --bg2: #2f2733;
+    --transparent-bg: rgba(25, 25, 25, 0.8);
+    --shadow: rgba(255, 255, 255, 0.1);
 }
 
-h3 { 
-    margin-bottom: 8px; 
-    color: #333; 
-    font-size:1.1rem; 
+/* --- GLOBAL STYLES --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', sans-serif; 
+    overflow: hidden;
+    background: var(--bg); 
 }
 
-fieldset {
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    padding: 8px;
-    margin-bottom: 8px;
+/* --- HEADER --- */
+.app-header {
+    height: 50px; 
+    background: var(--secondary); 
+    border-bottom: 1px solid var(--primary);
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px var(--shadow);
+    user-select: none;
 }
 
-input {
-    padding: 4px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+.logo { font-size: 1.2rem; color: var(--white); font-weight: bold; }
+
+.header-controls { 
+    display: flex; 
+    gap: 10px; 
+    align-items: center; 
+}
+
+/* Button Styles */
+.btn-primary, .btn-secondary {
+    padding: 6px 12px; 
+    border: none; 
+    border-radius: 3px; 
+    cursor: pointer;
     font-size: 0.9rem;
-    margin-bottom: 4px;
+    transition: all 0.2s; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; /* Space between icon and text */
 }
 
-button {
-    background-color: #800080;
-    color: #fff;
+.btn-primary { background: var(--primary); color: var(--white); }
+.btn-primary:hover { background: var(--white); color: var(--accent); }
+.btn-primary:active { background-color: var(--bg2); color: var(--accent);}
+
+.btn-secondary { background: var(--white); color: var(--primary); }
+.btn-secondary:hover { background: var(--accent); color: var(--white); }
+.btn-secondary:active { background-color: var(--bg2); color: var(--white);}
+
+.divider { 
+    width: 1px; 
+    height: 20px; 
+    background: var(--white); 
+    margin: 0 4px; 
+}
+
+/* --- TIP BAR --- */
+.tip-bar {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg2);
+    color: var(--white);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 4px 10px var(--shadow);
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 1500;
+    pointer-events: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* --- MAIN CANVAS --- */
+#network-container { 
+    position: relative; 
+    width: 100vw; 
+    height: calc(100vh - 80px); /* Total height minus Header (50) & Footer (30) */
+}
+
+#network { width: 100%; height: 100%; }
+
+.empty-hint {
+    position: absolute; 
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bg2); 
+    font-size: 1rem; 
+    pointer-events: none; /* Allows clicks to pass through to the canvas */
+    z-index: -1;
+}
+
+/* Infer button */
+.btn-infer {
+    position: absolute;
+    bottom: 3%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--accent);
+    color: var(--white);
+    padding: 10px 16px;
     border: none;
+    border-radius: 25px;
+    box-shadow: 0 0px 15px var(--secondary);
+    cursor: pointer;
+    font-size: 1.3rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    transition: background-color 0.2s, box-shadow 0.1s;
+    z-index: 100;
+}
+
+.btn-infer:hover {
+    background-color: var(--white); 
+    color: var(--accent); 
+    box-shadow: 0 0px 40px var(--accent);
+}
+
+.btn-infer:active {
+    background-color: var(--bg2);
+    box-shadow: 0 0px 10px var(--accent);
+}
+
+.infer-badge {
+    position: absolute;
+    top: -6px;
+    right: -5px;
+    background-color: var(--danger);
+    color: var(--white); 
+    border-radius: 10px; 
+    min-width: 18px;
+    height: 18px;
+    padding: 1px 4px;
+    font-size: 0.8rem; 
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- FOOTER (Status Bar) --- */
+.app-footer {
+    height: 30px; 
+    background: var(--bg2); 
+    border-top: 1px solid var(--secondary);
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 0 20px; 
+    font-size: 0.8rem; 
+    color: var(--white);
+}
+
+.footer-left, .footer-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.version-pill {
+    background: var(--bg2); 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    font-weight: 600; 
+    color: var(--white);
+}
+
+.footer-link { 
+    text-decoration: none; 
+    color: var(--accent); 
+    transition: color 0.2s; 
+}
+.footer-link:hover { color: var(--white); }
+
+
+/* --- ORBIT MENU (The Context Menu) --- */
+.orbit-container {
+    position: absolute; 
+    left: 0; 
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* 1. Actions (The Capsule Below Node) */
+.orbit-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(15%, 50%);
+    
+    display: flex; gap: 8px; 
+    pointer-events: auto;
+    background: var(--bg2); 
+    padding: 6px; 
+    border-radius: 50px;
+    box-shadow: 0 4px 15px var(--shadow); 
+    border: 1px solid var(--secondary);
+}
+
+.orbit-menu button {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
     padding: 4px 8px;
-    border-radius: 5px;
+    border-radius: 8px;
+    color: var(--white);
+}
+
+.orbit-menu button:hover { transform: scale(1.2); }
+.orbit-menu button.danger:hover { color: var(--white); text-shadow: 0 0 5px var(--danger); }
+.orbit-menu button.edge:hover { color: var(--white); text-shadow: 0 0 5px var(--accent); }
+.orbit-menu button.edge:active { color: var(--accent); }
+.orbit-menu button.danger:active { color: var(--danger); }
+
+/* 2. Satellites (The Color Arc) */
+.satellite {
+    position: absolute; 
+    width: 24px; height: 24px; 
+    top: 0; left: 0;
+    margin-left: -12px;
+    margin-top: -12px;
+    border-radius: 50%;
+    border: 1px solid var(--white); 
+    box-shadow: 0 2px 4px var(--shadow);
+    cursor: pointer; 
+    pointer-events: auto; 
+    z-index: 900;
+    
+    /* The Logic: Rotate axis -> Push out -> Rotate self back */
+    opacity: 0;
+    transform: rotate(var(--angle)) translate(0px) rotate(calc(-1 * var(--angle))) scale(0.5);
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+}
+
+.satellite.visible {
+    opacity: 1;
+    transform: rotate(var(--angle)) translate(50px) rotate(calc(-1 * var(--angle))) scale(1);
+}
+
+.satellite.visible:hover { 
+    transform: rotate(var(--angle)) translate(55px) rotate(calc(-1 * var(--angle))) scale(1.2); 
+    z-index: 10;
+}
+
+
+/* --- EDGE MENU --- */
+.context-menu {
+    position: absolute; 
+    pointer-events: auto;
+    z-index: 1000;
+}
+
+.menu-item {
+    width: 100%;
+    padding: 10px; 
+    background: var(--secondary); 
+    box-shadow: 0 4px 12px var(--shadow); 
+    border: 1px solid var(--primary); 
+    border-radius: 20px;
+    cursor: pointer; 
+    display: flex; align-items: center; gap: 8px; 
+    color: var(--white);
+    font-weight: bold;
+}
+.menu-item:hover { transform: scale(1.2); color: var(--white); text-shadow: 0 0 5px var(--danger); }
+.menu-item:active { color: var(--danger); }
+
+/* --- FLOATING INPUT (Renaming) --- */
+.floating-input {
+    position: absolute; 
+    z-index: 1000; 
+    transform: translate(-50%, -50%);
+    padding: 6px 12px; 
+    font-size: 1rem; 
+    color: var(--white);
+    background: var(--bg2);
+    border: 2px solid var(--secondary); 
+    border-radius: 6px; 
+    outline: none;
+    box-shadow: 0 4px 10px var(--shadow); 
+    text-align: center; 
+    font-family: inherit;
+    min-width: 100px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* --- PRESETS GRID (Dynamic Layout) --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #1f192197; /* Semi-transparent dark overlay */
+    z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.modal-card {
+    background: var(--bg2); 
+    width: 1000px; max-width: 90%; max-height: 80vh;
+    border-radius: 12px;
+    overflow: hidden; 
+    display: flex; flex-direction: column;
+}
+
+.modal-body { 
+    padding: 20px; 
+    overflow-y: auto; 
+    background: var(--bg2); 
+}
+
+.preset-grid {
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap: 15px;
+}
+
+.preset-card {
+    aspect-ratio: 0.8; 
+    color: var(--white);
+    background: var(--secondary); 
+    border-radius: 8px; 
+    border: 1px solid var(--primary);
+    cursor: pointer; 
+    font: 3em;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: all 0.2s; 
+    overflow: hidden; 
+    position: relative;
+    user-select: none;
+}
+
+.preset-card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 10px 15px -3px var(--shadow); 
+    border-color: var(--accent); 
+}
+
+/* Close Button */
+.btn-close {
+    position: absolute; 
+    top: 50px; right: 5px; 
+    background: transparent;
+    border: none;
+    border-radius: 15px;
+    padding: 8px 24px 14px;
+    font-size: 4rem;
+    color: var(--primary); 
     cursor: pointer;
-    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s;
 }
 
-button:hover { 
-    background-color: #ff6600; 
-}
+.btn-close:hover { color: var(--accent); }
+.btn-close:active { color: var(--white); }
 
-.hidden { display: none; }
-
-#network {
-    background-color: #ffffff;
-    background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
-    background-size: 20px 20px;
+/* The "Import" Tile specific style */
+.preset-card.new-preset { 
+    border: 3px dashed var(--secondary); 
+    background: var(--bg); 
+    color: var(--secondary); 
 }
-
-.color-swatch {
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-    margin: 2px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    border-radius: 3px;
+.preset-card.new-preset:hover { 
+    border-color: var(--accent); 
+    color: var(--accent); 
 }
+.icon-plus { font-size: 3rem; margin-bottom: 5px; }
 
-.color-swatch:hover {
-    border-color: #000;
-    transform: scale(1.1);
-}
+/* Images for loaded presets */
+.preset-thumb { width: 100%; height: 70%; object-fit: cover; background: var(--bg); }
+.preset-info { padding: 10px; font-size: 0.9rem; font-weight: 500; text-align: center; width: 100%; }
+
+
+/* --- Hidden --- */
+.hidden { display: none !important; opacity: 0; }
+
+/* Hide Vis.js default manipulation bar */
+.vis-manipulation { display: none !important; opacity: 0;}

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_cors import CORS
 from semantic_net import SemanticNet
 import json
@@ -12,6 +12,11 @@ CORS(app)
 net = SemanticNet()
 PRESETS_DIR = "./presets"
 
+# Serve presets (images and json)
+@app.route('/presets/<path:filename>')
+def serve_presets(filename):
+    return send_from_directory(PRESETS_DIR, filename)
+
 # load json file
 def load_json(filepath):
     try:
@@ -22,25 +27,36 @@ def load_json(filepath):
         net = SemanticNet()
     
         # Load Nodes (with colors/metadata)
-        net_data = data.get("graph", {})
+        # Support both legacy flat format and new nested format
+        if "graph" in data:
+            net_data = data["graph"]
+            nodes = net_data.get("nodes", [])
+            edges = net_data.get("edges", [])
+        else:
+            # Fallback for legacy files
+            nodes = data.get("nodes", [])
+            edges = data.get("edges", [])
 
-        for n in data["nodes"]:
-            net.add_node(n)
-
-        for n in net_data.get("nodes", []):
-            net.add_node(
-                n.get("id"),
-                color=n.get("color", "#808080"))
+        for n in nodes:
+            # Extract attributes, defaulting if missing
+            node_id = n.get("id")
+            if not node_id: continue
+            
+            color = n.get("color", "#808080")
+            x = n.get("x")
+            y = n.get("y")
+            
+            net.add_node(node_id, color=color)
 
         # Load Edges
-        for e in net_data.get("edges", []):
+        for e in edges:
             net.add_relation(
                 e.get("source"),
                 e.get("relation"),
                 e.get("target"),
                 type=e.get("type", "manual"),
                 inferred=e.get("dashes", False)
-                )
+            )
         
         return True
 
@@ -64,11 +80,13 @@ def get_presets():
             with open(os.path.join(PRESETS_DIR, f), "r") as file:
                 data = json.load(file)
         
-            meta = data.get("meta", {})
+            # Check if sidecar image exists
+            img_name = f.replace(".json", ".png")
+            has_img = os.path.exists(os.path.join(PRESETS_DIR, img_name))
+
             files.append({
                 "filename": f,
-                "name": meta.get("name", "Untitled"),
-                "has_preview": meta.get("thumbnail") is not None
+                "has_preview": has_img
             })
         except:
             continue
@@ -106,6 +124,21 @@ def export_json():
     file_path = os.path.join(PRESETS_DIR, f"{name}.json")
     with open(file_path, "w") as f:
         json.dump(export_data, f, indent=2)
+    
+    # Save Sidecar Image
+    if thumbnail_b64:
+        try:
+            # Handle data URI scheme
+            if "," in thumbnail_b64:
+                _, encoded = thumbnail_b64.split(",", 1)
+            else:
+                encoded = thumbnail_b64
+            
+            img_data = base64.b64decode(encoded)
+            with open(os.path.join(PRESETS_DIR, f"{name}.png"), "wb") as f:
+                f.write(img_data)
+        except Exception as e:
+            print(f"Failed to save thumbnail: {e}")
     
     return jsonify({"success": True})
 
@@ -156,6 +189,11 @@ def remove_relation():
 def inference():
     new_edges, conflicts = net.run_inference()
     return jsonify({"new_edges": new_edges, "conflicts": conflicts})
+
+@app.route("/check_inference")
+def check_inference():
+    count = net.check_inference_potential()
+    return jsonify({"count": count})
 
 # Initialize with default
 load_json(os.path.join(PRESETS_DIR, "default.json"))

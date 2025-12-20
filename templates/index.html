@@ -2,80 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Semantic Net Assignment</title>
+    <title>Semantic Net Visualizer Beta</title>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- External library for network visualization -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
 
-<div id="controlPanel">
-    <h3>Semantic Net Controls</h3>
+    <header class="app-header">
+        <div class="logo">
+            <i class="fas fa-project-diagram"></i> Semantic Net Visualizer Beta
+        </div>
+        <div class="header-controls">
+            <button id="btn-add-node" class="btn-secondary"
+             title="Add Node (Double Click)">+ Node</button>
+            <div class="divider"></div>
+            <button id="btn-presets" class="btn-primary">
+                <i class="fas fa-folder-open"></i> Presets
+            </button>
+            <button id="btn-export" class="btn-primary">
+                <i class="fas fa-file-export"></i> Export JSON
+            </button>
+        </div>
+    </header>
 
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Examples & Export</legend>
-        <div>
-            <select id="exampleSelect" onchange="loadExample(this.value)" style="width: 100%; margin-bottom: 5px;">
-                <!-- Populated by JS -->
-            </select>
-            <button onclick="exportImage()">Export Image</button>
-            <div style="margin-top: 5px;">
-                <button onclick="importJSON()">Import JSON</button>
-                <button onclick="exportJSON()">Export JSON</button>
+    <main id="network-container">
+        <div id="tip-bar" class="tip-bar hidden"></div>
+        <div id="network"></div>
+        
+        <div id="empty-state" class="empty-hint">
+            <i class="fas fa-mouse-pointer"></i> Double-click empty space to add a node
+        </div>
+
+        <button id="btn-infer" class="btn-infer hidden" title="Run Inference">
+            <span>✨ Infer</span>
+            <span id="infer-badge" class="infer-badge">0</span>
+        </button>
+
+        <div id="orbit" class="orbit-container hidden">
+            <div class="orbit-menu">
+                <button id="ctx-add-rel" title="Link" class="edge"><i class="fas fa-link"></i></button>
+                <button id="ctx-remove-node" title="Delete" class="danger"><i class="fas fa-trash"></i></button>
+            </div>
+            
+            <div id="orbit-satellites"></div>
+        </div>
+    </main>
+    
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span>&copy; 2025 Omar H.</span>
+        </div>
+        <div class="footer-right">
+            <span class="version-pill">Beta v0.2</span>
+            <a href="https://github.com/VenStudio/Semantic-Net-Visualizer" target="_blank" class="footer-link">
+                <i class="fab fa-github"></i> Source Code
+            </a>
+        </div>
+    </footer>
+
+    <div id="edge-menu" class="context-menu hidden">
+        <button class="menu-item" id="ctx-remove-rel">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+
+    <div id="modal-presets" class="modal-overlay">
+        <button class="btn-close" onclick="closeModal('modal-presets')">×</button>
+        <div class="modal-card">
+            <div class="modal-body">
+                <div class="preset-grid" id="preset-grid">
+                    <div class="preset-card new-preset" onclick="document.getElementById('file-upload').click()">
+                        <div class="icon-plus">+</div>
+                    </div>
+                </div>
+                
+                <input type="file" id="file-upload" accept=".json" style="display: none;">
             </div>
         </div>
-    </fieldset>
+    </div>
 
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Add Node</legend>
-        <div>
-            <input id="nodeAdd" placeholder="Name">
-            <input type="color" id="nodeColor" value="#808080">
-            <div id="colorPalette" style="margin-top: 5px;"></div>
-            <button onclick="addNode()">Add Node</button>
-        </div>
-    </fieldset>
-
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Add Relationship</legend>
-        <div>
-            <input id="relFromAdd" placeholder="From">
-            <input id="relTypeAdd" placeholder="Relation">
-            <input id="relToAdd" placeholder="To">
-            <button onclick="addRelation()">Add Relation</button>
-        </div>
-    </fieldset>
-
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Remove Node</legend>
-        <div>
-            <input id="nodeRemove" placeholder="Name">
-            <button onclick="removeNode()">Remove Node</button>
-        </div>
-    </fieldset>
-
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Remove Relationship</legend>
-        <div>
-            <input id="relFromRemove" placeholder="From">
-            <input id="relTypeRemove" placeholder="Relation">
-            <input id="relToRemove" placeholder="To">
-            <button onclick="removeRelation()">Remove Relation</button>
-        </div>
-    </fieldset>
-
-    <fieldset>
-        <legend onclick="this.parentNode.querySelector('div').classList.toggle('hidden');" style="cursor:pointer;">Inference (Bonus)</legend>
-        <div>
-            <button onclick="inference()">Run Inference</button>
-        </div>
-    </fieldset>
-</div>
-
-<div id="network" style="width: 100%; height: 100vh;"></div>
-<script src="{{ url_for('static', filename='ui.js') }}"></script>
-<script>
-    initNetwork();
-</script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+    
+    <script src="{{ url_for('static', filename='js/orbit.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/interactions.js') }}"></script>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
