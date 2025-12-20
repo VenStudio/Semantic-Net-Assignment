@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "name": "Animal Kingdom",
+    "version": "1.0",
+    "thumbnail": ""
+  },
+  "settings": {
+    "palette": ["lightblue", "red", "orange", "purple", "lightgreen"]
+  },
+  "graph": {
+    "nodes": [
+        {"id": "Animal", "color": "lightblue"},
+        {"id": "Mammal", "color": "lightblue"},
+        {"id": "Bird", "color": "red"},
+        {"id": "Dog", "color": "orange"},
+        {"id": "Cat", "color": "orange"},
+        {"id": "Eagle", "color": "purple"},
+        {"id": "Penguin", "color": "purple"},
+        {"id": "Wings", "color": "lightgreen"},
+        {"id": "Fur", "color": "lightgreen"},
+        {"id": "Milk", "color": "lightgreen"}
+    ],
+    "edges": [
+        {"source": "Mammal", "target": "Animal", "relation": "is-a"},
+        {"source": "Bird", "target": "Animal", "relation": "is-a"},
+        {"source": "Dog", "target": "Mammal", "relation": "is-a"},
+        {"source": "Cat", "target": "Mammal", "relation": "is-a"},
+        {"source": "Eagle", "target": "Bird", "relation": "is-a"},
+        {"source": "Penguin", "target": "Bird", "relation": "is-a"},
+
+        {"source": "Mammal", "target": "Fur", "relation": "has"},
+        {"source": "Mammal", "target": "Milk", "relation": "produces"},
+        {"source": "Bird", "target": "Wings", "relation": "has"},
+
+        {"source": "Eagle", "target": "Fly", "relation": "can"},
+        {"source": "Penguin", "target": "Fly", "relation": "cannot"}
+    ]
+  }
+}

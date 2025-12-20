@@ -1,232 +1,165 @@
-# server.py
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from semantic_net import SemanticNet
+import json
+import base64
+import os
 
+VERSION = "0.2"
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 net = SemanticNet()
+PRESETS_DIR = "./presets"
 
-# Define Examples Data
-EXAMPLES = {
-    "RPG World": {
-        "nodes": [
-            "Character", "Hero", "Knight", "Wizard", "Merchant",
-            "Enemy", "Goblin", "Dragon",
-            "Item", "Sword", "Magic Staff", "Healing Potion", "Gold Coin", "Armor",
-            "Ability", "Fireball", "Slash",
-            "Location", "Forest", "Volcano"
-        ],
-        "edges": [
-            ("Hero", "is-a", "Character"),
-            ("Knight", "is-a", "Hero"),
-            ("Wizard", "is-a", "Hero"),
-            ("Merchant", "is-a", "Character"),
-            ("Goblin", "is-a", "Enemy"),
-            ("Dragon", "is-a", "Enemy"),
-            ("Sword", "is-a", "Item"),
-            ("Magic Staff", "is-a", "Item"),
-            ("Healing Potion", "is-a", "Item"),
-            ("Gold Coin", "is-a", "Item"),
-            ("Armor", "is-a", "Item"),
-            ("Slash", "is-a", "Ability"),
-            ("Fireball", "is-a", "Ability"),
-            ("Forest", "is-a", "Location"),
-            ("Volcano", "is-a", "Location"),
+# load json file
+def load_json(filepath):
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+    
+        global net
+        net = SemanticNet()
+    
+        # Load Nodes (with colors/metadata)
+        net_data = data.get("graph", {})
 
-            ("Knight", "has-a", "Sword"),
-            ("Wizard", "has-a", "Magic Staff"),
+        for n in data["nodes"]:
+            net.add_node(n)
 
-            ("Goblin", "located-in", "Forest"),
-            ("Dragon", "located-in", "Volcano"),
-            ("Merchant", "located-in", "Forest"),
+        for n in net_data.get("nodes", []):
+            net.add_node(
+                n.get("id"),
+                color=n.get("color", "#808080"))
 
-            ("Magic Staff", "can-use", "Fireball"),
-            ("Sword", "can-use", "Slash"),
-            ("Hero", "can-use", "Healing Potion"),
-            ("Character", "can-use", "Armor"),
+        # Load Edges
+        for e in net_data.get("edges", []):
+            net.add_relation(
+                e.get("source"),
+                e.get("relation"),
+                e.get("target"),
+                type=e.get("type", "manual"),
+                inferred=e.get("dashes", False)
+                )
+        
+        return True
 
-            ("Goblin", "drops", "Gold Coin"),
-            ("Dragon", "drops", "Armor")
-        ],
-        "colors": {
-            "Character": "lightblue",
-            "Merchant": "lightblue",
-            "Hero": "lightblue",
-            "Knight": "lightblue",
-            "Wizard": "lightblue",
-
-            "Enemy": "red",
-            "Goblin": "red",
-            "Dragon": "red",
-
-            "Item": "orange",
-            "Sword": "orange",
-            "Magic Staff": "orange",
-            "Armor": "orange",
-            "Gold Coin": "orange",
-            "Healing Potion": "orange",
-
-            "Ability": "purple",
-            "Slash": "purple",
-            "Fireball": "purple",
-
-            "Location": "lightgreen",
-            "Forest": "lightgreen",
-            "Volcano": "lightgreen"
-        }
-    },
-    "Animal Kingdom": {
-        "nodes": ["Animal", "Mammal", "Bird", "Dog", "Cat", "Eagle", "Penguin", "Wings", "Fur", "Milk"],
-        "edges": [
-            ("Mammal", "is-a", "Animal"),
-            ("Bird", "is-a", "Animal"),
-            ("Dog", "is-a", "Mammal"),
-            ("Cat", "is-a", "Mammal"),
-            ("Eagle", "is-a", "Bird"),
-            ("Penguin", "is-a", "Bird"),
-            ("Mammal", "has", "Fur"),
-            ("Mammal", "produces", "Milk"),
-            ("Bird", "has", "Wings"),
-            ("Eagle", "can", "Fly"),
-            ("Penguin", "cannot", "Fly")
-        ],
-        "colors": {
-            "Animal": "#D3D3D3",
-            "Mammal": "#FFD700",
-            "Bird": "#87CEEB",
-            "Dog": "#8B4513",
-            "Cat": "#000000",
-            "Eagle": "#DAA520",
-            "Penguin": "#2F4F4F",
-            "Wings": "#FFFFFF",
-            "Fur": "#A0522D",
-            "Milk": "#FFFAF0"
-        }
-    }
-}
-
-# Global State
-current_colors = {}
-
-def load_dataset(name):
-    global net, current_colors
-    data = EXAMPLES.get(name)
-    if not data:
+    except Exception as e:
+        print(f"Error loading file: {e}")
         return False
-    
-    net = SemanticNet()
-    current_colors = data["colors"].copy()
-    
-    for n in data["nodes"]:
-        net.add_node(n)
-    for s, r, t in data["edges"]:
-        net.add_relation(s, r, t)
-    return True
-
-# Initialize with default
-load_dataset("RPG World")
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# API endpoints for frontend real-time manipulation
-@app.route("/get_examples")
-def get_examples():
-    return jsonify(list(EXAMPLES.keys()))
+# Project Management (Presets)
+@app.route("/get_presets")
+def get_presets():
+    files = []
+    for f in os.listdir(PRESETS_DIR):
+        if not f.endswith(".json"):
+            continue
+        
+        try:
+            with open(os.path.join(PRESETS_DIR, f), "r") as file:
+                data = json.load(file)
+        
+            meta = data.get("meta", {})
+            files.append({
+                "filename": f,
+                "name": meta.get("name", "Untitled"),
+                "has_preview": meta.get("thumbnail") is not None
+            })
+        except:
+            continue
 
-@app.route("/load_example", methods=["POST"])
-def load_example_route():
-    name = request.json.get("name")
-    if load_dataset(name):
-        return jsonify({"success": True})
-    return jsonify({"error": "Example not found"}), 404
+    return jsonify(files)
 
-@app.route("/load_custom", methods=["POST"])
-def load_custom_route():
+@app.route("/export_json", methods=["POST"])
+def export_json():
     data = request.json
-    nodes = data.get("nodes", [])
-    edges = data.get("edges", [])
 
-    net = SemanticNet()
-    current_colors = data["colors"].copy()
+    # Extract pieces from the frontend request
+    name = data.get("name", "Untitled")
+    thumbnail_b64 = data.get("img_data", "") # The Base64 string from canvas
+    palette = data.get("palette", [])        # Frontend must send the current palette colors
+    nodes = data.get("nodes", [])            # Frontend sends current node state
+    edges = data.get("edges", [])            # Frontend sends current edge state
 
-    for n in nodes:
-        net.add_node(n.get("id"))
-        current_colors[n.get("id")] = n.get("color")
-    for s, r, t in edges:
-        net.add_relation(s.get("from"), r.get("label"), t.get("to"))
+    # Construct the exact JSON structure you defined
+    export_data = {
+        "meta": {
+            "name": name,
+            "version": VERSION,
+            "thumbnail": thumbnail_b64  # Baked directly into the JSON
+        },
+        "settings": {
+            "palette": palette
+        },
+        "graph": {
+            "nodes": nodes,
+            "edges": edges
+        }
+    }
+
+    # Save JSON
+    file_path = os.path.join(PRESETS_DIR, f"{name}.json")
+    with open(file_path, "w") as f:
+        json.dump(export_data, f, indent=2)
+    
     return jsonify({"success": True})
 
-@app.route("/get_nodes")
-def get_nodes():
-    node_objs = []
-    for n in net.graph.nodes:
-        color = current_colors.get(n, "#808080")
-        node_objs.append({
-            "id": n,
-            "label": n,
-            "color": color
-        })
-    return jsonify({"nodes": node_objs})
+@app.route("/import_json", methods=["POST"])
+def import_json():
+    filename = request.json.get("filename")
+    path = os.path.join(PRESETS_DIR, filename)
+    if load_json(path):
+        return jsonify({"success": True})
+    return jsonify({"error": f"{filename} not found"}), 404
 
-@app.route("/get_edges")
-def get_edges():
-    edges_list = [(u, v, d.get("relation")) for u, v, d in net.graph.edges(data=True)]
-    return jsonify({"edges": edges_list})
+# Graph Operations
+@app.route("/get_graph")
+def get_graph():
+    return jsonify(net.get_graph_data())
 
 @app.route("/add_node", methods=["POST"])
 def add_node():
-    data = request.get_json()
-    name = data.get("name")
-    color = data.get("color")
-    if not name:
-        return jsonify({"error": "Node name required"}), 400
-    net.add_node(name)
-    if color:
-        current_colors[name] = color
-    return jsonify({"success": True})
-
-@app.route("/remove_node", methods=["POST"])
-def remove_node():
-    data = request.get_json()
-    name = data.get("name")
-    if not name:
-        return jsonify({"error": "Node name required"}), 400
-    net.remove_node(name)
+    data = request.json
+    net.add_node(data.get("name"), color=data.get("color"))
     return jsonify({"success": True})
 
 @app.route("/add_relation", methods=["POST"])
 def add_relation():
-    data = request.get_json()
-    source = data.get("source")
-    relation = data.get("relation")
-    target = data.get("target")
-    if not source or not relation or not target:
-        return jsonify({"error": "Source, relation, and target required"}), 400
-    try:
-        net.add_relation(source, relation, target)
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    data = request.json
+    net.add_relation(data.get("source"), data.get("relation"), data.get("target"))
+    
+    inference_count = net.check_inference_potential()
+
+    return jsonify({
+        "success": True,
+        "inference_count": inference_count
+    })
+
+@app.route("/remove_node", methods=["POST"])
+def remove_node():
+    data = request.json
+    net.remove_node(data.get("name"))
     return jsonify({"success": True})
 
 @app.route("/remove_relation", methods=["POST"])
 def remove_relation():
-    data = request.get_json()
-    source = data.get("source")
-    relation = data.get("relation")
-    target = data.get("target")
-    if not source or not relation or not target:
-        return jsonify({"error": "Source, relation, and target required"}), 400
-    net.remove_relation(source, relation, target)
+    data = request.json
+    net.remove_relation(data.get("source"), data.get("relation"), data.get("target"))
     return jsonify({"success": True})
 
 @app.route("/inference", methods=["POST"])
 def inference():
-    new_edges, conflicts = net.inference()
+    new_edges, conflicts = net.run_inference()
     return jsonify({"new_edges": new_edges, "conflicts": conflicts})
+
+# Initialize with default
+load_json(os.path.join(PRESETS_DIR, "default.json"))
 
 if __name__ == "__main__":
     app.run()
+

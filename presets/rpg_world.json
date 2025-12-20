@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "name": "RPG World",
+    "version": "1.0",
+    "thumbnail": ""
+  },
+  "settings": {
+    "palette": ["lightblue", "red", "orange", "purple", "lightgreen"]
+  },
+  "graph": {
+    "nodes": [
+        {"id": "Hero", "color": "lightblue"},
+        {"id": "Knight", "color": "lightblue"},
+        {"id": "Wizard", "color": "lightblue"},
+        {"id": "Merchant", "color": "lightblue"},
+        {"id": "Goblin", "color": "red"},
+        {"id": "Dragon", "color": "red"},
+        {"id": "Sword", "color": "orange"},
+        {"id": "Magic Staff", "color": "orange"},
+        {"id": "Healing Potion", "color": "orange"},
+        {"id": "Gold Coin", "color": "orange"},
+        {"id": "Armor", "color": "orange"},
+        {"id": "Fireball", "color": "purple"},
+        {"id": "Slash", "color": "purple"},
+        {"id": "Forest", "color": "lightgreen"},
+        {"id": "Volcano", "color": "lightgreen"},
+        {"id": "Character", "color": "lightblue"},
+        {"id": "Hero", "color": "lightblue"},
+        {"id": "Knight", "color": "lightblue"},
+        {"id": "Wizard", "color": "lightblue"},
+        {"id": "Merchant", "color": "lightblue"},
+        {"id": "Enemy", "color": "red"},
+        {"id": "Goblin", "color": "red"},
+        {"id": "Dragon", "color": "red"},
+        {"id": "Item", "color": "orange"},
+        {"id": "Sword", "color": "orange"},
+        {"id": "Magic Staff", "color": "orange"},
+        {"id": "Healing Potion", "color": "orange"},
+        {"id": "Gold Coin", "color": "orange"},
+        {"id": "Armor", "color": "orange"},
+        {"id": "Ability", "color": "purple"},
+        {"id": "Fireball", "color": "purple"},
+        {"id": "Slash", "color": "purple"},
+        {"id": "Location", "color": "lightgreen"},
+        {"id": "Forest", "color": "lightgreen"},
+        {"id": "Volcano", "color": "lightgreen"}
+    ],
+    "edges": [
+        {"source": "Hero", "target": "Character", "relation": "is-a"},
+        {"source": "Knight", "target": "Hero", "relation": "is-a"},
+        {"source": "Wizard", "target": "Hero", "relation": "is-a"},
+        {"source": "Merchant", "target": "Character", "relation": "is-a"},
+        {"source": "Goblin", "target": "Enemy", "relation": "is-a"},
+        {"source": "Dragon", "target": "Enemy", "relation": "is-a"},
+        {"source": "Sword", "target": "Item", "relation": "is-a"},
+        {"source": "Magic Staff", "target": "Item", "relation": "is-a"},
+        {"source": "Healing Potion", "target": "Item", "relation": "is-a"},
+        {"source": "Gold Coin", "target": "Item", "relation": "is-a"},
+        {"source": "Armor", "target": "Item", "relation": "is-a"},
+        {"source": "Slash", "target": "Ability", "relation": "is-a"},
+        {"source": "Fireball", "target": "Ability", "relation": "is-a"},
+        {"source": "Forest", "target": "Location", "relation": "is-a"},
+        {"source": "Volcano", "target": "Location", "relation": "is-a"},
+
+        {"source": "Knight", "target": "Sword",  "relation":  "has-a"},
+        {"source":  "Wizard",  "target":  "Magic Staff",  "relation":  "has-a"},
+
+        {"source":  "Goblin",  "target":  "Forest",  "relation":  "located-in"},
+        {"source":  "Dragon",  "target":  "Volcano",  "relation":  "located-in"},
+        {"source":  "Merchant",  "target":  "Forest",  "relation":  "located-in"},
+
+        {"source":  "Magic Staff",  "target":  "Fireball",  "relation":  "can-use"},
+        {"source":  "Sword",  "target":  "Slash",  "relation":  "can-use"},
+        {"source":  "Hero",  "target":  "Healing Potion",  "relation":  "can-use"},
+        {"source":  "Character",  "target":  "Armor",  "relation":  "can-use"},
+
+        {"source":  "Goblin",  "target":  "Gold Coin",  "relation":  "drops"},
+        {"source":  "Dragon",  "target":  "Armor",  "relation":  "drops"}
+    ]
+  }
+}

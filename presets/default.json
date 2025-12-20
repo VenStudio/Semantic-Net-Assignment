@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "name": "Default",
+    "version": "1.0",
+    "thumbnail": ""
+  },
+  "settings": {
+    "palette": ["blue", "purple", "pink", "cyan"]
+  },
+  "graph": {
+    "nodes": [
+        {"id": "node1", "color": "blue"},
+        {"id": "node2", "color": "blue"},
+        {"id": "node3", "color": "purple"},
+        {"id": "node4", "color": "pink"},
+        {"id": "node5", "color": "cyan"}
+    ],
+    "edges": [
+        {"source": "node1", "target": "node2", "relation": "is-a"},
+        {"source": "node2", "target": "node3", "relation": "part-of"},
+        {"source": "node3", "target": "node1", "relation": "related-to"},
+        {"source": "node3", "target": "node4", "relation": "has-a"},
+        {"source": "node5", "target": "node2", "relation": "refers-to"}
+    ]
+  }
+}
