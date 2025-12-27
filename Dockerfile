@@ -8,9 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip==23.3.1 && pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your code (app.py, static/, templates/)
-COPY app.py ./
-COPY static/ ./static/
-COPY templates/ ./templates/
+COPY . .
 
 # Open the port Flask runs on (5000)
 EXPOSE 5000
