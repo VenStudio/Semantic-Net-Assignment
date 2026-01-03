@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # Or 'master', depending on your default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # 1. Go to the project folder
+            cd ~/semantic-net-visualizer
+            
+            # 2. Pull the latest changes
+            git pull origin main
+            
+            # 3. Rebuild and restart the container
+            docker compose up -d --build
+            
+            # 4. Clean up unused images to save disk space
+            docker image prune -f
